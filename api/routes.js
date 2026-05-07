@@ -2,6 +2,7 @@ const { Router } = require('express');
 
 const { caching } = require('./middlewares');
 const SurahHandler = require('./handlers/surah');
+const AudioHandler = require('./handlers/audio');
 const JuzHandler = require('./handlers/juz');
 
 const router = Router();
@@ -36,6 +37,10 @@ router.get('/surah', caching, SurahHandler.getAllSurah);
 router.get('/surah/:surah', caching, SurahHandler.getSurah);
 router.get('/surah/:surah/:ayah', caching, SurahHandler.getAyahFromSurah);
 router.get('/juz/:juz', caching, JuzHandler.getJuz);
+
+router.get('/ayah/:edition/:ayah', caching, AudioHandler.getAudioByAyah);
+router.get('/audio/:edition/:surah', caching, AudioHandler.getAudioBySurah);
+router.get('/reciters', caching, AudioHandler.getReciters);
 
 // fallback router
 router.all('*', (req, res) => res.status(404).send({
