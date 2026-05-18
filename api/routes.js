@@ -41,6 +41,7 @@ router.get('/juz/:juz', caching, JuzHandler.getJuz);
 router.get('/ayah/:edition/:ayah', caching, AudioHandler.getAudioByAyah);
 router.get('/audio/:edition/:surah', caching, AudioHandler.getAudioBySurah);
 router.get('/reciters', caching, AudioHandler.getReciters);
+router.get('/reciters/v3', AudioHandler.getRecitersV3)
 
 // fallback router
 router.all('*', (req, res) => res.status(404).send({

@@ -4,6 +4,10 @@ module.exports = {
     apiUrl: 'https://api.alquran.cloud'
   },
 
+  mp3quran: {
+    apiUrl: 'https://mp3quran.net/api/v3'
+  },
+
   axios: {
     timeout: 10000,
     headers: {

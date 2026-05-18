@@ -1,21 +1,20 @@
 const config = require('../../config/api.js')
-
 const {
   successResponse,
   errorResponse
 } = require('../../helpers/response.js')
-
 const {
   isValidBitrate,
   isValidAyah,
   isValidSurah
 } = require('../../utils/validator.js')
-
 const {
   getAyahAudioUrl,
   getSurahAudioUrl,
   getReciters
 } = require('../../services/quran.service.js')
+const { getRecitersV3 } = require('../../services/mp3quran.service.js')
+const { isValidLanguage } = require('../../utils/validator.js')
 
 class AudioController {
   /**
@@ -162,6 +161,64 @@ class AudioController {
         res,
         'Success fetching reciters.',
         reciters
+      )
+    } catch (error) {
+      return errorResponse(
+        res,
+        error.message
+      )
+    }
+  }
+
+  static async getRecitersV3(
+    req,
+    res
+  ) {
+    try {
+      const {
+        language,
+        reciter,
+        sura,
+        rewaya
+      } = req.query
+
+      // validate language
+      if (
+        language &&
+        !isValidLanguage(language)
+      ) {
+        return errorResponse(
+          res,
+          'Invalid language.',
+          400
+        )
+      }
+
+      // validate sura
+      if (
+        sura &&
+        (Number(sura) < 1 ||
+          Number(sura) > 114)
+      ) {
+        return errorResponse(
+          res,
+          'Sura must be between 1 and 114.',
+          400
+        )
+      }
+
+      const data =
+        await getRecitersV3({
+          language,
+          reciter,
+          sura,
+          rewaya
+        })
+
+      return successResponse(
+        res,
+        'Success fetching reciters v3.',
+        data
       )
     } catch (error) {
       return errorResponse(
