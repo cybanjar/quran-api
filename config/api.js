@@ -8,6 +8,10 @@ module.exports = {
     apiUrl: 'https://mp3quran.net/api/v3'
   },
 
+  prayer: {
+    apiUrl: 'https://api.aladhan.com'
+  },
+
   axios: {
     timeout: 10000,
     headers: {
