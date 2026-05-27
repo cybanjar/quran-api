@@ -4,6 +4,8 @@ const { caching } = require('./middlewares');
 const SurahHandler = require('./handlers/surah');
 const AudioHandler = require('./handlers/audio');
 const JuzHandler = require('./handlers/juz');
+const PrayerHandler = require('./handlers/prayer');
+const docs = require('./docs')
 
 const router = Router();
 
@@ -12,28 +14,9 @@ router.use((req, res, next) => {
   next();
 });
 
-router.get('/', (req, res) => res.status(200).send({
-  surah: {
-    listSurah: '/surah',
-    spesificSurah: {
-      pattern: '/surah/{surah}',
-      example: '/surah/18'
-    },
-    spesificAyahInSurah: {
-      pattern: '/surah/{surah}/{ayah}',
-      example: '/surah/18/60'
-    },
-    spesificJuz: {
-      pattern: '/juz/{juz}',
-      example: '/juz/30'
-    }
-  },
-  maintaner: 'Sutan Gading Fadhillah Nasution <contact@gading.dev>',
-  source: 'https://github.com/gadingnst/quran-api'
-}));
+router.get('/', (req, res) => res.status(200).send(docs))
 
 router.get('/surah', caching, SurahHandler.getAllSurah);
-
 router.get('/surah/:surah', caching, SurahHandler.getSurah);
 router.get('/surah/:surah/:ayah', caching, SurahHandler.getAyahFromSurah);
 router.get('/juz/:juz', caching, JuzHandler.getJuz);
@@ -42,6 +25,8 @@ router.get('/ayah/:edition/:ayah', caching, AudioHandler.getAudioByAyah);
 router.get('/audio/:edition/:surah', caching, AudioHandler.getAudioBySurah);
 router.get('/reciters', caching, AudioHandler.getReciters);
 router.get('/reciters/v3', AudioHandler.getRecitersV3)
+
+router.get('/prayer/timings/:date', PrayerHandler.getTimings)
 
 // fallback router
 router.all('*', (req, res) => res.status(404).send({
