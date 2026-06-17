@@ -1,10 +1,11 @@
 const { Router } = require('express');
 
-const { caching } = require('./middlewares');
+const { caching, verifyToken } = require('./middlewares');
 const SurahHandler = require('./handlers/surah');
 const AudioHandler = require('./handlers/audio');
 const JuzHandler = require('./handlers/juz');
 const PrayerHandler = require('./handlers/prayer');
+const AuthHandler = require('./handlers/auth');
 const docs = require('./docs')
 
 const router = Router();
@@ -27,6 +28,15 @@ router.get('/reciters', caching, AudioHandler.getReciters);
 router.get('/reciters/v3', AudioHandler.getRecitersV3)
 
 router.get('/prayer/timings/:date', PrayerHandler.getTimings)
+
+// Authentication
+router.post('/register', AuthHandler.register);
+router.post('/login', AuthHandler.login);
+router.post('/forgot-password', AuthHandler.forgotPassword);
+router.post('/reset-password', AuthHandler.resetPassword);
+router.get('/verify-email', AuthHandler.verifyEmail);
+router.post('/email-verification-notification', AuthHandler.resendVerification);
+router.post('/logout', verifyToken, AuthHandler.logout);
 
 // fallback router
 router.all('*', (req, res) => res.status(404).send({

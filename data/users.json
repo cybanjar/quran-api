@@ -1,0 +1,22 @@
+[
+  {
+    "id": "1781701347649",
+    "name": "ucup",
+    "email": "ucup@yopmail.com",
+    "password": "$2a$10$35YxRHatEzcFZ56HUthhY.K.ULgKHb5dGxCIta7yPkckD/h80f8EK",
+    "emailVerified": true,
+    "verificationToken": null,
+    "resetToken": null,
+    "createdAt": "2026-06-17T13:02:27.649Z"
+  },
+  {
+    "id": "1781701898720",
+    "name": "ucup1",
+    "email": "ucup1@yopmail.com",
+    "password": "$2a$10$kI.lFLA6.AeZUkYB6p3ZkOAQk5Q9DximXIN6cTPcD8NWspDLTTRlO",
+    "emailVerified": false,
+    "verificationToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE3ODE3MDE4OTg3MjAiLCJpYXQiOjE3ODE3MDE4OTgsImV4cCI6MTc4MTc4ODI5OH0.l-y7E0QO3TWxX-YtGS0p0oG6TTVomljEimHGpKqrd00",
+    "resetToken": null,
+    "createdAt": "2026-06-17T13:11:38.720Z"
+  }
+]

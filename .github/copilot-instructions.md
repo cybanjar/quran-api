@@ -1,60 +1,50 @@
-## Quick orient — what this project is
+# Quick orient — quran-api (for automated coding agents)
 
-This repo is a small Node/Express JSON API that serves a pre-built Quran dataset and audio metadata. Key concerns:
-- API code lives under `api/` (server, routes, handlers, middleware).
-- Canonical data files live in `data/` (especially `data/quran.json` and `data/juz.json`).
-- A crawler (`crawler/script.js`) regenerates `data/quran.json` by fetching multiple upstream sources.
+This repository is a small Node/Express JSON API that serves a pre-built Quran dataset and audio metadata. Keep guidance short, concrete and code-aware so you can be productive immediately.
 
-## Big-picture architecture
+Key locations
+- API server and routes: `api/server.js`, `api/routes.js`, `api/middlewares.js`
+- Route handlers: `api/handlers/*.js` (e.g. `surah.js`, `audio.js`, `juz.js`) — handlers are classes with static methods.
+- Canonical data: `data/quran.json`, `data/juz.json`
+- Data generator / crawler: `crawler/script.js` (recreates `data/quran.json`)
+- Juz assembly logic: `api/lib/juz.js`
+- Services: `services/*.js` (business logic used by handlers)
 
-- `api/server.js` boots an Express app, loads `routes.js`, and uses `dotenv` for `PORT`.
-- `api/routes.js` wires routes and a simple in-memory caching middleware `api/middlewares.js`.
-- Route handlers are organized in `api/handlers/*.js` as classes with static methods (e.g. `SurahHandler`, `AudioController`, `JuzHandler`). They follow a consistent JSON response shape: { code, status, message, data }.
-- `api/lib/juz.js` provides logic to assemble a Juz from `data/juz.json` + `data/quran.json` (so both files must be consistent when editing).
-- Audio metadata / URLs are computed (not stored) by `api/handlers/audio.js` and reference external CDN(s) like `https://cdn.islamic.network` and `https://api.alquran.cloud`.
+Big picture (what to know)
+- The app is a stateless Express server that reads canonical JSON files at startup and serves derived JSON responses.
+- No database — runtime state comes from files in `data/`. Changing those files often requires running the crawler (`npm run crawl`) or restarting the server.
+- Audio metadata/URLs are computed on the fly (see `api/handlers/audio.js`) and reference external CDNs (`cdn.islamic.network`, `api.alquran.cloud`).
+- There is a small in-memory request cache implemented in `api/middlewares.js` keyed by `req.url`. It's process-local and reset on restart.
 
-## Developer workflows & useful commands
+Conventions and patterns to follow
+- CommonJS modules everywhere (use `require` / `module.exports`).
+- Handlers are classes with static methods. Register them in `api/routes.js` using the existing caching middleware.
+  - Example route pattern: `router.get('/surah', caching, SurahHandler.getAllSurah)`
+- Responses follow a strict JSON shape: { code, status, message, data }. All handlers must return this shape and appropriate HTTP codes.
+- `api/handlers/audio.js` validates bitrates against an allowed list: [192,128,64,48,40,32]. Follow this when adding audio endpoints.
+- Surah/ayah bounds are enforced (surah: 1–114, global ayah index up to 6236). Use service helpers (e.g. `services/quran.service.js`) where available.
+- When changing Juz logic, update both `api/lib/juz.js` and `data/juz.json` to keep them consistent.
 
-- Install / build: `npm install` (there is a `build` script that runs `npm install`).
-- Run production-style server: `npm start` (runs `node api/server.js`).
-- Run in dev mode with auto-reload: `npm run dev` (uses `nodemon`).
-- Re-generate canonical JSON data: `npm run crawl` (runs `node crawler/script.js`).
-  - After `crawl` finishes it writes `data/quran.json`. Restart the server to pick up new data because the app requires a process restart to read updated JSON.
+Developer workflows (commands you can use)
+- Install deps: `npm install`
+- Start production-style server: `npm start` (runs `node api/server.js`)
+- Dev mode with auto-reload: `npm run dev` (nodemon)
+- Regenerate canonical JSON: `npm run crawl` (runs `node crawler/script.js`). After crawling, restart the server to pick up `data/quran.json`.
 
-## Project-specific conventions and gotchas
+Integration points and external dependencies
+- Crawler fetches upstream editions from `api.alquran.cloud` and other sources in `crawler/script.js`.
+- Audio URLs rely on CDNs: `cdn.islamic.network` and `cdn.alquran.cloud` (see `api/handlers/audio.js`).
+- No external DB or queue — everything is file-backed.
 
-- CommonJS modules (require/module.exports). Add new files using the same style.
-- Responses always use the pattern: status HTTP code + JSON body with `code`, `status`, `message`, `data`. Follow this format in new handlers for consistency.
-- Routes set a `Cache-Control` header in `api/routes.js`. Additionally `api/middlewares.js` implements an in-memory `cache` object keyed by `req.url`. This cache is process-local and cleared on restart — don't rely on it for long-term caching.
-- Handlers are implemented as classes with static methods. Example:
-  - `api/handlers/surah.js` exports `SurahHandler` with `getAllSurah`, `getSurah`, `getAyahFromSurah`.
-- Audio endpoints validate request params strictly (see allowed bitrates in `api/handlers/audio.js`: [192,128,64,48,40,32]) and return helpful 400 responses on invalid input.
-- `crawler/script.js` is the single source for regenerating `data/quran.json`. It fetches upstream editions and merges tafsir; changing data shape requires updating both crawler and handlers that read `data/*.json`.
+Small, actionable rules for code changes
+- Prefer small edits and preserve CommonJS style. Don't introduce ESM unless the project already migrated.
+- When adding endpoints: wire route in `api/routes.js`, implement handler as a class in `api/handlers/`, follow response shape, and reuse services in `services/`.
+- If you change `data/*.json`, either regenerate via the crawler or document why the manual change is safe. Restart the server to pick up changes.
+- Use the in-memory cache middleware when appropriate (routes already use it; follow existing pattern).
 
-## Integration points / external dependencies
+Examples (copy-paste patterns)
+- Route registration: `router.get('/surah', caching, SurahHandler.getAllSurah)`
+- Handler response:
+  return res.status(200).send({ code: 200, status: 'OK.', message: 'Success', data })
 
-- Primary upstream sources used by the crawler: `api.alquran.cloud`, `quran.kemenag.go.id` (see `crawler/script.js` and `README.md`).
-- Audio URLs are composed against `cdn.islamic.network` and `cdn.alquran.cloud` (see `api/handlers/audio.js`).
-- No DB: all runtime data is served from `data/*.json` files.
-
-## Where to make common edits
-
-- Add new endpoints: `api/routes.js` -> new handler at `api/handlers/<name>.js`.
-- Change the canonical dataset: edit or re-generate `data/quran.json` (preferred via `npm run crawl`).
-- Modify Juz logic: `api/lib/juz.js` and `data/juz.json`.
-
-## Examples (copy/paste patterns)
-
-- Route registration pattern (use same caching middleware):
-  router.get('/surah', caching, SurahHandler.getAllSurah)
-- Handler response pattern (use same JSON shape):
-  return res.status(200).send({ code:200, status:'OK.', message:'Success', data })
-
-## Small reminders for bots/agents
-
-- Preserve CommonJS style and existing JSON response shape.
-- When changing `data/*.json`, run `npm run crawl` if the change should be produced by the crawler and restart the server to validate.
-- Be mindful that the in-memory cache in `api/middlewares.js` is process-local; testing endpoints after changing handlers may require clearing cache (restart server).
-- Use the allowed bitrate list and numeric ranges enforced in `api/handlers/audio.js` and the numeric bounds for surah/ayah (surah: 1–114, ayah: 1–6236) when generating or validating requests.
-
-If anything here is unclear or you want more examples (tests, PR checklist, or CI hooks), tell me which area to expand and I'll iterate.
+If anything here is unclear or a handler's behavior seems inconsistent with the data files, open a short issue and include the route and a sample request/response. Ask me if you want automated tests or a small smoke-test harness added — I can create one quickly.
