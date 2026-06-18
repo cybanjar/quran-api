@@ -2,14 +2,13 @@ const AuthService = require('../../services/auth.service');
 
 class AuthHandler {
   static async register(req, res) {
-    console.log('Register request:', { body: req.body });
     try {
       const { name, email, password } = req.body;
       const user = await AuthService.register({ name, email, password });
       // send verification email
-      const token = AuthService.generateVerification(email);
+      const token = await AuthService.generateVerification(email);
       const verifyUrl = `${req.protocol}://${req.get('host')}/verify-email?token=${token}`;
-      AuthService.sendEmail({ to: email, subject: 'Verify your email', text: `Click to verify: ${verifyUrl}` });
+      await AuthService.sendEmail({ to: email, subject: 'Verify your email', text: `Click to verify: ${verifyUrl}` });
 
       return res.status(201).send({ code: 201, status: 'Created.', message: 'User registered. Verification email sent.', data: { id: user.id, email: user.email } });
     } catch (e) {
@@ -30,7 +29,7 @@ class AuthHandler {
   static async forgotPassword(req, res) {
     try {
       const { email } = req.body;
-      const token = AuthService.generateResetToken(email);
+      const token = await AuthService.generateResetToken(email);
       if (!token) return res.status(200).send({ code: 200, status: 'OK.', message: 'If the email exists, a reset link has been sent.' });
       const url = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
       await AuthService.sendEmail({ to: email, subject: 'Password reset', text: `Reset your password: ${url}` });
@@ -63,7 +62,7 @@ class AuthHandler {
   static async resendVerification(req, res) {
     try {
       const { email } = req.body;
-      const token = AuthService.generateVerification(email);
+      const token = await AuthService.generateVerification(email);
       if (!token) return res.status(404).send({ code: 404, status: 'Not Found.', message: 'Email not found.' });
       const verifyUrl = `${req.protocol}://${req.get('host')}/verify-email?token=${token}`;
       await AuthService.sendEmail({ to: email, subject: 'Verify your email', text: `Click to verify: ${verifyUrl}` });
