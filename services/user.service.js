@@ -64,10 +64,23 @@ const removeSavedAyat = async (userId, surahId, ayat) => {
   }
 };
 
+const getProfile = async (userId) => {
+  const client = await pool.connect();
+  try {
+    const r = await client.query('SELECT id, name, email, email_verified, created_at FROM users WHERE id = $1', [userId]);
+    if (!r.rowCount) return null;
+    const u = r.rows[0];
+    return { ...u };
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   setLastRead,
   getLastRead,
   saveAyat,
   listSavedAyats,
-  removeSavedAyat
+  removeSavedAyat,
+  getProfile
 };
