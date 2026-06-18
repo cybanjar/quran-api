@@ -46,6 +46,7 @@ router.get('/me/last-read', verifyToken, UserHandler.getLastRead);
 router.post('/me/saved-ayats', verifyToken, UserHandler.saveAyat);
 router.get('/me/saved-ayats', verifyToken, UserHandler.listSavedAyats);
 router.delete('/me/saved-ayats', verifyToken, UserHandler.removeSavedAyat);
+router.get('/me/profile', verifyToken, UserHandler.getProfile);
 
 // fallback router
 router.all('*', (req, res) => res.status(404).send({
