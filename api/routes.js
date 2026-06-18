@@ -6,6 +6,7 @@ const AudioHandler = require('./handlers/audio');
 const JuzHandler = require('./handlers/juz');
 const PrayerHandler = require('./handlers/prayer');
 const AuthHandler = require('./handlers/auth');
+const UserHandler = require('./handlers/user');
 const docs = require('./docs')
 
 const router = Router();
@@ -37,6 +38,14 @@ router.post('/reset-password', AuthHandler.resetPassword);
 router.get('/verify-email', AuthHandler.verifyEmail);
 router.post('/email-verification-notification', AuthHandler.resendVerification);
 router.post('/logout', verifyToken, AuthHandler.logout);
+
+// User scoped endpoints (require token)
+router.post('/me/last-read', verifyToken, UserHandler.setLastRead);
+router.get('/me/last-read', verifyToken, UserHandler.getLastRead);
+
+router.post('/me/saved-ayats', verifyToken, UserHandler.saveAyat);
+router.get('/me/saved-ayats', verifyToken, UserHandler.listSavedAyats);
+router.delete('/me/saved-ayats', verifyToken, UserHandler.removeSavedAyat);
 
 // fallback router
 router.all('*', (req, res) => res.status(404).send({
