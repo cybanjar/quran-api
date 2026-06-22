@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: quran_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    # or use image if you publish one
+    environment:
+      PG_HOST: db
+      PG_PORT: 5432
+      PG_USER: postgres
+      PG_PASS: postgres
+      PG_DATABASE: quran_db
+      JWT_SECRET: "me_secure"
+      SMTP_MAILER: smtp
+      SMTP_HOST: sandbox.smtp.mailtrap.io
+      SMTP_PORT: 2525
+      SMTP_USER: 72ce0f2cdeb928
+      SMTP_PASS: 80c25747b32926
+      SMTP_FROM: admin@quranapi.com
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+volumes:
+  pgdata:
