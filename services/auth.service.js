@@ -3,22 +3,47 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const pool = require('../config/db');
 
-const sendEmail = async ({ to, subject, text }) => {
+const sendEmail = async ({ to, subject, text, html }) => {
+  // If no SMTP host configured, fall back to console log (dev mode)
   if (!process.env.SMTP_HOST) {
-    console.log('[EMAIL] To:', to, 'Subject:', subject, '\n', text);
+    console.log('[EMAIL-LOG] SMTP not configured. Email contents:');
+    console.log('To:', to);
+    console.log('Subject:', subject);
+    console.log(text);
     return true;
   }
-  const transporter = nodemailer.createTransport({
+
+  const transporterConfig = {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
     secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
-    }
-  });
-  await transporter.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to, subject, text });
-  return true;
+    tls: { rejectUnauthorized: process.env.SMTP_REJECT_UNAUTHORIZED !== 'false' }
+  };
+
+  if (process.env.SMTP_USER) {
+    transporterConfig.auth = { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS };
+  }
+
+  const transporter = nodemailer.createTransport(transporterConfig);
+
+  try {
+    // verify connection configuration (will throw if cannot connect)
+    await transporter.verify();
+  } catch (err) {
+    console.error('[EMAIL-ERROR] SMTP verify failed:', err && err.message ? err.message : err);
+    throw new Error('SMTP connection/credentials invalid: ' + (err && err.message ? err.message : String(err)));
+  }
+
+  try {
+    const message = { from: process.env.SMTP_FROM || process.env.SMTP_USER, to, subject };
+    if (html) message.html = html;
+    if (text) message.text = text;
+    await transporter.sendMail(message);
+    return true;
+  } catch (err) {
+    console.error('[EMAIL-ERROR] sendMail failed:', err && err.message ? err.message : err);
+    throw new Error('Failed to send email: ' + (err && err.message ? err.message : String(err)));
+  }
 };
 
 const register = async ({ name, email, password }) => {

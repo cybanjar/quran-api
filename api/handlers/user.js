@@ -5,8 +5,8 @@ class UserHandler {
     try {
       const userId = req.user && req.user.id;
       if (!userId) return res.status(401).send({ code: 401, status: 'Unauthorized.', message: 'Missing user' });
-      const { surahId, ayat } = req.body;
-      const result = await UserService.setLastRead(userId, { surahId, ayat });
+      const { surahId, ayat, surahName } = req.body;
+      const result = await UserService.setLastRead(userId, { surahId, ayat, surahName });
       return res.status(200).send({ code: 200, status: 'OK.', message: 'Last read saved', data: result });
     } catch (e) {
       return res.status(e.status || 500).send({ code: e.status || 500, status: 'Error.', message: e.message });
