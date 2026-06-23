@@ -1,15 +1,15 @@
 const pool = require('../config/db');
 
-const setLastRead = async (userId, { surahId, ayat }) => {
+const setLastRead = async (userId, { surahId, ayat, surahName }) => {
   const client = await pool.connect();
   try {
     await client.query(
-      `INSERT INTO last_reads(user_id, surah_id, ayat, updated_at)
-       VALUES($1,$2,$3,now())
-       ON CONFLICT (user_id) DO UPDATE SET surah_id = EXCLUDED.surah_id, ayat = EXCLUDED.ayat, updated_at = now()`,
-      [userId, surahId, ayat]
+      `INSERT INTO last_reads(user_id, surah_id, ayat, surah_name, updated_at)
+       VALUES($1,$2,$3,$4,now())
+       ON CONFLICT (user_id) DO UPDATE SET surah_id = EXCLUDED.surah_id, ayat = EXCLUDED.ayat, surah_name = EXCLUDED.surah_name, updated_at = now()`,
+      [userId, surahId, ayat, surahName]
     );
-    return { userId, surahId, ayat };
+    return { userId, surahId, ayat, surahName };
   } finally {
     client.release();
   }
@@ -18,8 +18,8 @@ const setLastRead = async (userId, { surahId, ayat }) => {
 const getLastRead = async (userId) => {
   const client = await pool.connect();
   try {
-    const r = await client.query('SELECT surah_id, ayat FROM last_reads WHERE user_id = $1', [userId]);
-    return r.rowCount ? { surahId: r.rows[0].surah_id, ayat: r.rows[0].ayat } : null;
+    const r = await client.query('SELECT surah_id, ayat, surah_name FROM last_reads WHERE user_id = $1', [userId]);
+    return r.rowCount ? { surahId: r.rows[0].surah_id, ayat: r.rows[0].ayat, surahName: r.rows[0].surah_name } : null;
   } finally {
     client.release();
   }
